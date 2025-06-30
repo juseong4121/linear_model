@@ -1,3 +1,4 @@
+#추정
 df <- data.frame(x=c(4,8,9,8,8,
                          12,6,10,6,9),
                  y=c(9,20,22,15,17,
@@ -38,3 +39,23 @@ predict(reg,newdata = data.frame(x=c(4,6,8,9,10,12)), interval = "confidence", l
 
 #실제값 y의 예측구간 : 오차항 변동성 포함.
 predict(reg, newdata = data.frame(x = 10), interval = "prediction")
+
+#confidence band
+# 예측 + 신뢰대(confidence interval)
+pred_conf <- predict(reg, newdata = data.frame(x=df$x), interval = "confidence", level = 0.95)
+pred_conf
+
+plot_data <- cbind(data.frame(x=df$x), pred_conf)
+plot_data
+ggplot(df, aes(x= x,y= y))+
+    geom_point()+
+    geom_line(data= plot_data,aes(x=x, y= fit),color='blue',lwd=1)+
+    geom_ribbon(data = plot_data, aes(x=x, ymin = lwr, ymax = upr), alpha = 0.2, fill = "blue")
+#geom_ribbon()에서 y의 aesthetic를 요구하지 않는데 
+#이미 based layer를 aes(x=x,y=y)로 받고 있음.
+
+ggplot() +
+    geom_point(data = df, aes(x = x, y = y)) +
+    geom_line(data = plot_data, aes(x = x, y = fit), color = 'blue', lwd = 1) +
+    geom_ribbon(data = plot_data, aes(x = x, ymin = lwr, ymax = upr), 
+                fill = "blue", alpha = 0.2)
