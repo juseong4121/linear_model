@@ -59,3 +59,55 @@ ggplot() +
     geom_line(data = plot_data, aes(x = x, y = fit), color = 'blue', lwd = 1) +
     geom_ribbon(data = plot_data, aes(x = x, ymin = lwr, ymax = upr), 
                 fill = "blue", alpha = 0.2)
+
+
+#검정#####
+df <- data.frame(x=c(4,8,9,8,8,
+                     12,6,10,6,9),
+                 y=c(9,20,22,15,17,
+                     30,18,25,10,20))
+df
+reg <- lm(y~x,data = df)
+#mu_y|x 검정
+x0 <- 6
+pred <- predict(reg, newdata = data.frame(x = x0), se.fit = TRUE)
+#predict(reg,newdata = data.frame(x=x0), interval = 'confidence') : 구간으로 나옴.
+#pred$fit = hat{y_0}
+#pred$se.fit = 표준오차; sqrt(MSE*(1/n + (x-barx)^2 /s_xx))
+
+#ex) H_0 : mu_0 = mu_y|x ^0 = 9이라고 하자.
+mu_0 <- 9
+t0 <- (pred$fit - mu_0 )/pred$se.fit
+df <- reg$df.residual
+pvalue <- pt(-abs(t0),df=df,lower.tail = T) #단측검정
+
+cat("t =", round(t0, 3), " with df =", df, "\n")
+cat("p-value =", round(pvalue, 4), "\n")
+
+#beta1 검정 
+summary(reg) #바로 체크가능.
+
+#beta1 검정 노가다
+beta1_hat <- coef(reg)[2]
+se_beta1 <- summary(reg)$coefficients[2,2] # beta1 표준오차 : sqrt(hat{Var(hat{beta1})}) = sqrt(MSE/s_xx)
+df <- reg$df.residual
+
+# 검정통계량 (H0: beta1 = 0)
+t_stat <- beta1_hat / se_beta1
+
+p_value <- 2 * pt(-abs(t_stat), df)
+
+cat("t =", round(t_stat, 3), "with df =", df, "\n")
+cat("p-value =", round(p_value, 4), "\n")
+
+# 귀무가설 H0 : x=0
+library(car)
+names(coef(reg))
+linearHypothesis(reg, "x = 0") #hypothesis_0 : beta_1 = a로 검정가능. 
+
+# 귀무가설 H0: (Intercept) = 0
+linearHypothesis(reg, "(Intercept) = 0")
+summary(reg) #비교
+
+#다중 검정
+linearHypothesis(reg, c("(Intercept) = 0", "x = 0"))
